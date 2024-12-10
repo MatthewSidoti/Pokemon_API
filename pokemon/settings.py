@@ -14,6 +14,7 @@ from pathlib import Path
 import dj_database_url
 import environ
 import os
+from datetime import timedelta
 
 env=environ.Env()
 environ.Env.read_env()
@@ -28,13 +29,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2c=0xp6=jp-sd(n*5se5qsu@l^@!&ui04!7pi!xtods(_povmj'
+SECRET_KEY = os.environ.get("SECRET_KEY", "localkey2024")
+# SECRET_KEY = 'django-insecure-2c=0xp6=jp-sd(n*5se5qsu@l^@!&ui04!7pi!xtods(_povmj'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG =  'RENDER' not in os.environ 
 
 ALLOWED_HOSTS = []
 
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 
@@ -46,12 +51,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'pokemon_api.apps.PokemonApiConfig',
-    'rest_framework'
+    'rest_framework',
+    'corsheaeders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware', #add this!!!!!!
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -59,6 +66,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+#Below variable: MIDDLEWARES add this variable
+CORS_ALLOW_ALL_ORIGINS = True ## Variable CORS_ALLOW_ALL_ORIGINS is set to True to allow unrestricted access to the API.
 ROOT_URLCONF = 'pokemon.urls'
 
 TEMPLATES = [
@@ -132,3 +141,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
